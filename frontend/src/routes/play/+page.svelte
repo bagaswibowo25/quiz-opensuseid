@@ -181,6 +181,7 @@ SPDX-License-Identifier: MPL-2.0
 		{:else if gameData !== undefined && question_index === ''}
 			<ShowTitle
 				{username}
+				started={gameMeta.started}
 				title={gameData.title}
 				description={gameData.description}
 				cover_image={gameData.cover_image}

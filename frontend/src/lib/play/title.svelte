@@ -10,9 +10,10 @@ SPDX-License-Identifier: MPL-2.0
 		description: string;
 		cover_image: string | undefined;
 		username?: string;
+		started?: boolean;
 	}
 
-	let { title, description, cover_image, username }: Props = $props();
+	let { title, description, cover_image, username, started = false }: Props = $props();
 </script>
 
 <div class="flex flex-col items-center justify-center w-full min-h-dvh px-4 py-8 pb-24 gap-6">
@@ -38,7 +39,7 @@ SPDX-License-Identifier: MPL-2.0
 			</p>
 		{/if}
 		<p class="flex items-center gap-2 text-lg sm:text-xl text-white/80">
-			Waiting for the host to start
+			{started ? 'Look at the big screen 👀' : 'Waiting for the host to start'}
 			<span class="flex gap-1">
 				<span class="h-2 w-2 rounded-full bg-[#73BA25] animate-bounce"></span>
 				<span class="h-2 w-2 rounded-full bg-[#35B9AB] animate-bounce [animation-delay:150ms]"></span>
