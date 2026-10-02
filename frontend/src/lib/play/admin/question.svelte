@@ -13,6 +13,7 @@ SPDX-License-Identifier: MPL-2.0
 	import MediaComponent from '$lib/editor/MediaComponent.svelte';
 	import { getLocalization } from '$lib/i18n';
 	import ShapeIcon from '$lib/play/shape_icon.svelte';
+	import { play_tick, play_urgent, play_times_up } from '$lib/play/sounds';
 
 	interface Props {
 		quiz_data: QuizData;
@@ -43,6 +44,20 @@ SPDX-License-Identifier: MPL-2.0
 		} catch {
 			return 0;
 		}
+	});
+
+	// Countdown sounds: tick every second, urgent beeps for the last 5s, chime when time is up.
+	let last_timer: string | undefined = timer_res;
+	$effect(() => {
+		const current = timer_res;
+		if (current === last_timer) return;
+		last_timer = current;
+		const seconds = parseInt(current);
+		const total = parseInt(quiz_data.questions[selected_question]?.time);
+		if (isNaN(seconds) || seconds >= total) return;
+		if (seconds <= 0) play_times_up();
+		else if (seconds <= 5) play_urgent();
+		else play_tick();
 	});
 </script>
 

@@ -13,6 +13,7 @@ SPDX-License-Identifier: MPL-2.0
 	import Question from '$lib/play/admin/question.svelte';
 	import { SocketGameControls } from '$lib/play/admin/socket_game_controls.ts';
 	import type { IGameState } from '$lib/play/admin/game_state.ts';
+	import { unlock_audio } from '$lib/play/sounds';
 
 	const { t } = getLocalization();
 	const default_colors = ['#73BA25', '#35B9AB', '#21A4D4', '#173F4F'];
@@ -83,6 +84,8 @@ SPDX-License-Identifier: MPL-2.0
 
 	const socket_game_controls: SocketGameControls = new SocketGameControls(socket);
 </script>
+
+<svelte:window onpointerdown={unlock_audio} onkeydown={unlock_audio} />
 
 {#if game_state.control_visible}
 	<Controls {bg_color} {socket_game_controls} {game_token} bind:game_state />

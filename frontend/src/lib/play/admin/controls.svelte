@@ -9,6 +9,7 @@ SPDX-License-Identifier: MPL-2.0
 	import { getLocalization } from '$lib/i18n';
 	import { SocketGameControls } from '$lib/play/admin/socket_game_controls.ts';
 	import type { GameState } from '$lib/play/admin/game_state.ts';
+	import { is_muted, set_muted, unlock_audio, play_tick } from '$lib/play/sounds';
 
 	interface Props {
 		bg_color: string;
@@ -20,6 +21,16 @@ SPDX-License-Identifier: MPL-2.0
 	let { bg_color, socket_game_controls, game_token, game_state = $bindable() }: Props = $props();
 
 	const { t } = getLocalization();
+
+	let muted = $state(is_muted());
+	const toggle_sound = () => {
+		muted = !muted;
+		set_muted(muted);
+		if (!muted) {
+			unlock_audio();
+			play_tick();
+		}
+	};
 
 	const show_solutions = () => {
 		socket_game_controls.show_solutions();
@@ -38,6 +49,14 @@ SPDX-License-Identifier: MPL-2.0
 			{game_state.selected_question === -1 ? '0' : game_state.selected_question + 1}
 			/ {game_state.quiz_data.questions.length}
 		</span>
+		<button
+			type="button"
+			onclick={toggle_sound}
+			class="rounded-full bg-white/15 px-3 py-1 text-lg transition hover:bg-white/25"
+			title={muted ? 'Sound off — click to turn on' : 'Sound on — click to mute'}
+			aria-label={muted ? 'Unmute countdown sound' : 'Mute countdown sound'}
+			>{muted ? '🔇' : '🔊'}</button
+		>
 	</div>
 	<div class="flex items-center gap-2">
 		{#if game_state.selected_question + 1 === game_state.quiz_data.questions.length && ((game_state.timer_res === '0' && game_state.question_results !== null) || game_state.quiz_data?.questions?.[game_state.selected_question]?.type === QuizQuestionType.SLIDE)}
