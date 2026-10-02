@@ -10,7 +10,7 @@ SPDX-License-Identifier: MPL-2.0
 	import { kahoot_icons } from '$lib/play/kahoot_mode_assets/kahoot_icons';
 	import CircularTimer from '$lib/play/circular_progress.svelte';
 	// import CircularTimer from '$lib/play/circular_progress.svelte';
-	const default_colors = ['#D6EDC9', '#B07156', '#7F7057', '#4E6E58'];
+	const default_colors = ['#73BA25', '#35B9AB', '#21A4D4', '#173F4F'];
 
 	interface Props {
 		question: Question;

@@ -11,6 +11,16 @@ SPDX-License-Identifier: MPL-2.0
 @plugin "@tailwindcss/typography";
 @tailwind utilities;
 
+/* openSUSE theme */
+@font-face { font-family: 'Source Sans 3'; src: url('/fonts/SourceSans3-Regular.ttf.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Source Sans 3'; src: url('/fonts/SourceSans3-Semibold.ttf.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Source Sans 3'; src: url('/fonts/SourceSans3-Bold.ttf.woff2') format('woff2'); font-weight: 700 900; font-display: swap; }
+
+@theme {
+	--font-sans: 'Source Sans 3', 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+	--color-green-600: #6da741;
+}
+
 .marck-script {
 	font-family: 'Marck Script';
 }
@@ -20,7 +30,7 @@ SPDX-License-Identifier: MPL-2.0
 }
 
 .link-hover:hover {
-	color: #4e6e58;
+	color: #73BA25;
 }
 @layer base {
 	button:not(:disabled),
@@ -30,7 +40,7 @@ SPDX-License-Identifier: MPL-2.0
 }
 
 @utility normal-background {
-	@apply bg-gradient-to-r from-[#009444] via-[#39b54a] to-[#8dc63f] dark:bg-[#0f2702] dark:from-[#0f2702] dark:via-[#0f2702] dark:to-[#0f2702];
+	@apply bg-gradient-to-r from-[#73ba25] via-[#35b9ab] to-[#21a4d4] dark:bg-[#173f4f] dark:from-[#173f4f] dark:via-[#173f4f] dark:to-[#173f4f];
 }
 
 @utility admin-button {

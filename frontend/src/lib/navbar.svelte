@@ -52,8 +52,8 @@ SPDX-License-Identifier: MPL-2.0
 		<div class="lg:flex lg:items-center lg:flex-row gap-1">
 			<a
 				href="/"
-				class="font-black tracking-tight text-xl lg:text-2xl text-black marck-script link-hover px-3 lg:px-5"
-				>ClassQuiz</a
+				class="flex items-center gap-2 font-bold tracking-tight text-xl lg:text-2xl text-[#173F4F] link-hover px-3 lg:px-5"
+				><img src="/geeko.svg" alt="openSUSE" class="h-7 lg:h-8 w-auto" />ClassQuiz</a
 			>
 			<a class="btn-nav border-2 rounded-sm" href="/play">{$t('words.play')}</a>
 			<a class="btn-nav" href="/explore">{$t('words.explore')}</a>
@@ -170,8 +170,8 @@ SPDX-License-Identifier: MPL-2.0
 		<div class="flex items-center justify-between">
 			<a
 				href="/"
-				class="font-black tracking-tight text-xl lg:text-2xl text-black marck-script link-hover px-3 lg:px-5"
-				>ClassQuiz</a
+				class="flex items-center gap-2 font-bold tracking-tight text-xl lg:text-2xl text-[#173F4F] link-hover px-3 lg:px-5"
+				><img src="/geeko.svg" alt="openSUSE" class="h-7 lg:h-8 w-auto" />ClassQuiz</a
 			>
 			<a class="btn-nav flex" href="/play">{$t('words.play')}</a>
 
