@@ -141,8 +141,10 @@ SPDX-License-Identifier: MPL-2.0
 	socket.on('kick', () => {
 		window.alert('You were removed from this game by the host.');
 		preventReload = false;
-		// Only block re-joining this particular game, not every game on this browser
-		Cookies.set('kicked', game_pin, { expires: 1 });
+		// Kick = remove from the game, not a ban: the player may join again under another name.
+		// Drop the rejoin cookie so the reload doesn't silently reconnect with the kicked username.
+		Cookies.remove('joined_game');
+		Cookies.remove('kicked');
 		game_pin = '';
 		username = '';
 		window.location.reload();

@@ -125,10 +125,6 @@ SPDX-License-Identifier: MPL-2.0
 			return;
 		}
 		let captcha_resp: string;
-		if (Cookies.get('kicked') === game_pin) {
-			alert('You were removed from this game by the host.');
-			return;
-		}
 
 		if (captcha_enabled) {
 			if (hcaptchaSitekey) {
