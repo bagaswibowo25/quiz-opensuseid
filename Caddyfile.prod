@@ -1,0 +1,12 @@
+quiz.opensuse.id {
+	encode gzip
+
+	# Public visitors only need the join screen; admins log in at /account/login
+	@public_pages path / /explore /explore/* /search /search/* /account/register /account/register/*
+	redir @public_pages /play 302
+
+	reverse_proxy /api/* api:80
+	reverse_proxy /openapi.json api:80
+	reverse_proxy /socket.io/* api:80
+	reverse_proxy * frontend:3000
+}
