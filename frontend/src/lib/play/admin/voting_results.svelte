@@ -7,6 +7,8 @@ SPDX-License-Identifier: MPL-2.0
 <script lang="ts">
 	import type { Question } from '$lib/quiz_types';
 	import { QuizQuestionType } from '$lib/quiz_types';
+	import ShapeIcon from '$lib/play/shape_icon.svelte';
+	import { get_foreground_color } from '$lib/helpers';
 
 	interface Props {
 		data: any;
@@ -35,46 +37,26 @@ SPDX-License-Identifier: MPL-2.0
 </script>
 
 <div class="flex justify-center w-full">
-	<div
-		class="m-auto w-fit gap-4 flex flex-col"
-		style="grid-template-columns: repeat({quiz_answers.length}, minmax(0, 1fr));"
-	>
-		<div class="flex gap-12">
-			{#each quiz_answers as answer}
-				<span class="text-center self-end mx-auto text-lg"
-					>{#if sorted_data[answer] > 0}{sorted_data[answer]}{/if}</span
-				>
-			{/each}
-		</div>
-		<div class="flex gap-12">
-			{#each quiz_answers as answer, i}
+	<div class="flex items-end gap-6 lg:gap-10">
+		{#each quiz_answers as answer, i}
+			{@const is_vote = question.type === QuizQuestionType.VOTING}
+			<div class="flex w-24 lg:w-28 flex-col items-center gap-2" class:opacity-45={!answer_correct[i] && !is_vote}>
+				<span class="text-3xl font-extrabold">{sorted_data[answer] ?? 0}</span>
 				<div
-					class="w-20 self-end flex justify-center border border-black shadow-xl rounded-sm"
-					class:shadow-blue-500={answer_correct[i] &&
-						question.type !== QuizQuestionType.VOTING}
-					class:shadow-yellow-500={!answer_correct[i] &&
-						question.type !== QuizQuestionType.VOTING}
-					class:opacity-70={!answer_correct[i] &&
-						question.type !== QuizQuestionType.VOTING}
-					style="height: {(sorted_data[answer] * 20) /
-						data.length}rem; background-color: {quiz_colors[i]
-						? quiz_colors[i]
-						: 'black'}"
+					class="w-full rounded-t-2xl shadow-xl transition-all duration-700"
+					style="height: {Math.max(0.5, (sorted_data[answer] * 16) / Math.max(1, data.length))}rem; background-color: {quiz_colors[i] ?? '#73BA25'}"
 				></div>
-			{/each}
-		</div>
-		<div class="flex gap-12">
-			{#each quiz_answers as answer, i}
-				<div class="w-20">
-					<p
-						class="-rotate-45 text-xl text-str"
-						class:line-through={!answer_correct[i] &&
-							question.type !== QuizQuestionType.VOTING}
-					>
-						{@html answer}
-					</p>
+				<div
+					class="flex w-full items-center justify-center gap-1 rounded-xl py-2"
+					style="background-color: {quiz_colors[i] ?? '#73BA25'}; color: {get_foreground_color(
+						quiz_colors[i] ?? '#73BA25'
+					)}"
+				>
+					<ShapeIcon index={i} class="w-6 h-6" />
+					{#if answer_correct[i] && !is_vote}<span class="text-xl font-bold">✓</span>{/if}
 				</div>
-			{/each}
-		</div>
+				<p class="w-full truncate text-center text-base font-semibold" title={answer}>{@html answer}</p>
+			</div>
+		{/each}
 	</div>
 </div>

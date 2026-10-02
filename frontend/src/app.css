@@ -44,7 +44,7 @@ SPDX-License-Identifier: MPL-2.0
 }
 
 @utility admin-button {
-	@apply px-4 py-2 leading-5 text-white transition-colors duration-200 transform bg-gray-700 rounded-sm text-center hover:bg-gray-600 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50;
+	@apply px-5 py-2 leading-5 font-semibold text-[#0f2b36] transition-all duration-200 transform bg-[#73BA25] rounded-full text-center shadow-[0_4px_0_#4e8a12] hover:bg-[#82c93a] active:translate-y-1 active:shadow-none focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 @utility action-button {
@@ -52,4 +52,69 @@ SPDX-License-Identifier: MPL-2.0
 }
 @utility btn-nav {
 	@apply text-lg font-medium px-3 text-gray-600 hover:text-green-600 py-1.5 transition-all duration-300;
+}
+
+/* ---- openSUSE.Asia "stage" look for game screens (player + host) ---- */
+.stage {
+	position: relative;
+	isolation: isolate;
+	min-height: 100dvh;
+	color: #fff;
+	background-color: #12303e;
+}
+.stage::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		url('/kawung.svg') 0 0 / 165px 330px repeat,
+		linear-gradient(90deg, #173f4f 0%, #12303e 60%, #0e2734 100%);
+}
+.stage::after {
+	content: '';
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: clamp(40px, 9vh, 110px);
+	z-index: -1;
+	pointer-events: none;
+	background: url('/waves.svg') bottom / 100% 100% no-repeat;
+}
+@media (max-width: 640px) {
+	.stage::before {
+		background-size: 110px 220px, auto;
+	}
+}
+
+.stage-card {
+	@apply rounded-3xl border-2 border-[#73BA25] bg-[#0f2b36]/85 shadow-2xl backdrop-blur-sm;
+}
+.stage-pill {
+	@apply inline-block rounded-full bg-[#73BA25] px-6 py-2 font-bold text-[#173F4F];
+}
+.answer-tile {
+	@apply relative flex items-center gap-3 rounded-2xl border-2 border-white/25 transition-all duration-150 shadow-[0_6px_0_rgba(0,0,0,0.35)];
+}
+.answer-tile:not(:disabled):active {
+	transform: translateY(4px);
+	box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+@keyframes pop-in {
+	0% { transform: scale(0.4); opacity: 0; }
+	70% { transform: scale(1.08); opacity: 1; }
+	100% { transform: scale(1); }
+}
+.pop-in {
+	animation: pop-in 450ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+@keyframes shake {
+	0%, 100% { transform: translateX(0); }
+	20%, 60% { transform: translateX(-10px); }
+	40%, 80% { transform: translateX(10px); }
+}
+.shake {
+	animation: shake 450ms ease-in-out 200ms both;
 }

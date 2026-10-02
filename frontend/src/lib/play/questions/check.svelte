@@ -5,6 +5,7 @@ SPDX-License-Identifier: MPL-2.0
 -->
 
 <script lang="ts">
+	import ShapeIcon from '$lib/play/shape_icon.svelte';
 	import type { Question } from '$lib/quiz_types';
 	import { get_foreground_color } from '$lib/helpers';
 	import { kahoot_icons } from '$lib/play/kahoot_mode_assets/kahoot_icons';
@@ -55,7 +56,7 @@ SPDX-License-Identifier: MPL-2.0
         </div>
     -->
 	<div
-		class="absolute top-0 bottom-0 left-0 right-0 m-auto rounded-full h-fit w-fit border-2 border-black shadow-2xl z-40"
+		class="pointer-events-none absolute top-0 bottom-0 left-0 right-0 m-auto rounded-full h-fit w-fit border-4 border-white shadow-2xl z-40"
 	>
 		<CircularTimer text={timer_res} progress={circular_progress} color="#ef4444" />
 	</div>
@@ -63,7 +64,7 @@ SPDX-License-Identifier: MPL-2.0
 	<div class="grid grid-cols-2 auto-rows-fr gap-2 sm:gap-3 w-full p-2 sm:p-4 h-full">
 		{#each question.answers as answer, i}
 			<button
-				class="rounded-xl h-full min-h-0 flex align-middle justify-center disabled:opacity-60 p-2 sm:p-3 border-2 border-black transition-all"
+				class="answer-tile h-full min-h-0 p-3 sm:p-4"
 				style="background-color: {answer.color ??
 					default_colors[i]}; color: {get_foreground_color(
 					answer.color ?? default_colors[i]
@@ -73,9 +74,10 @@ SPDX-License-Identifier: MPL-2.0
 				class:opacity-50={!_selected_answers[i]}
 			>
 				{#if game_mode === 'kahoot'}
-					<img class="h-2/3 inline-block m-auto" alt="Icon" src={kahoot_icons[i]} />
+					<ShapeIcon index={i} class="m-auto w-1/2 h-1/2 max-w-24 max-h-24" />
 				{:else}
-					<p class="m-auto text-base sm:text-xl lg:text-3xl font-semibold leading-snug break-words [overflow-wrap:anywhere]">{answer.answer}</p>
+					<ShapeIcon index={i} class="w-6 h-6 sm:w-9 sm:h-9 opacity-90" />
+					<p class="flex-1 text-center text-base sm:text-xl lg:text-3xl font-bold leading-snug break-words [overflow-wrap:anywhere]">{answer.answer}</p>
 				{/if}
 			</button>
 		{/each}

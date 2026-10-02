@@ -165,7 +165,8 @@ SPDX-License-Identifier: MPL-2.0
 	<title>ClassQuiz - Play</title>
 </svelte:head>
 <div
-	class="min-h-screen min-w-full"
+	class="min-h-dvh min-w-full"
+	class:stage={!bg_color}
 	style="background: {bg_color ? bg_color : 'transparent'}"
 	class:text-black={bg_color}
 >
@@ -176,25 +177,23 @@ SPDX-License-Identifier: MPL-2.0
 			<ShowEndScreen bind:data={scores} show_final_results={true} {username} />
 		{:else if gameData !== undefined && question_index === ''}
 			<ShowTitle
+				{username}
 				title={gameData.title}
 				description={gameData.description}
 				cover_image={gameData.cover_image}
 			/>
 		{:else if gameMeta.started && gameData !== undefined && question_index !== '' && answer_results === undefined}
 			{#key unique}
-				<div class="text-black dark:text-black">
+				<div>
 					<Question bind:game_mode bind:question {question_index} {solution} />
 				</div>
 			{/key}
 		{:else if gameMeta.started && answer_results !== undefined}
 			{#if answer_results === null}
-				<div class="w-full flex justify-center">
-					<h1 class="text-3xl">{$t('admin_page.no_answers')}</h1>
+				<div class="w-full min-h-dvh flex items-center justify-center p-6">
+					<h1 class="stage-card px-8 py-6 text-3xl text-center">{$t('admin_page.no_answers')}</h1>
 				</div>
 			{:else}
-				<div>
-					<h2 class="text-center text-3xl mb-8">{$t('words.result', { count: 2 })}</h2>
-				</div>
 				{#key unique}
 					<KahootResults {username} question_results={answer_results} bind:scores />
 				{/key}

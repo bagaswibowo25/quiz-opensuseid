@@ -12,6 +12,7 @@ SPDX-License-Identifier: MPL-2.0
 	import CircularTimer from '$lib/play/circular_progress.svelte';
 	import MediaComponent from '$lib/editor/MediaComponent.svelte';
 	import { getLocalization } from '$lib/i18n';
+	import ShapeIcon from '$lib/play/shape_icon.svelte';
 
 	interface Props {
 		quiz_data: QuizData;
@@ -45,70 +46,69 @@ SPDX-License-Identifier: MPL-2.0
 	});
 </script>
 
-<div class="flex flex-col justify-center w-screen h-1/6">
-	<h1 class="text-6xl text-center">
+<div class="flex flex-col items-center gap-4 px-6 w-full">
+	<h1
+		class="pop-in w-full max-w-6xl rounded-3xl bg-white px-8 py-6 text-center text-4xl lg:text-6xl font-extrabold leading-tight text-[#173F4F] shadow-2xl"
+	>
 		{@html quiz_data.questions[selected_question].question}
 	</h1>
-	<!--			<span class='text-center py-2 text-lg'>{$t('admin_page.time_left')}: {timer_res}</span>-->
-	<div class="grid grid-cols-3 my-2">
+	<div class="grid w-full max-w-6xl grid-cols-3 items-center">
 		<span></span>
-		<div class="m-auto">
+		<div class="m-auto rounded-full border-4 border-white shadow-2xl">
 			<CircularTimer text={timer_res} progress={circular_progress} color="#ef4444" />
 		</div>
-		<p class="m-auto text-3xl">
-			{$t('admin_page.answers_submitted', { answer_count: answer_count })}
-		</p>
+		<div class="m-auto flex flex-col items-center rounded-2xl bg-[#0f2b36]/80 px-6 py-3">
+			<span class="text-5xl font-extrabold text-[#73BA25]">{answer_count}</span>
+			<span class="text-lg text-white/80">answers</span>
+		</div>
 	</div>
 </div>
 {#if quiz_data.questions[selected_question].image !== null}
-	<div class="flex w-full">
+	<div class="flex w-full mt-2">
 		<MediaComponent
 			src={quiz_data.questions[selected_question].image}
 			muted={false}
-			css_classes="max-h-[20vh] object-cover mx-auto mb-8 w-auto"
+			css_classes="max-h-[25vh] object-contain mx-auto mb-4 w-auto rounded-2xl shadow-xl"
 		/>
 	</div>
 {/if}
 {#if quiz_data.questions[selected_question].type === QuizQuestionType.ABCD || quiz_data.questions[selected_question].type === QuizQuestionType.VOTING || quiz_data.questions[selected_question].type === QuizQuestionType.CHECK}
-	<div class="grid grid-rows-2 grid-flow-col auto-cols-auto gap-2 w-full p-4">
+	<div class="mx-auto grid w-full max-w-7xl grid-cols-2 auto-rows-fr gap-4 p-6 pb-28">
 		{#each quiz_data.questions[selected_question].answers as answer, i}
+			{@const reveal = timer_res === '0' && quiz_data.questions[selected_question].type !== QuizQuestionType.VOTING}
 			<div
-				class="rounded-lg h-fit flex border-2 border-black"
-				style="background-color: {answer.color ?? default_colors[i]};"
-				class:opacity-50={!answer.right &&
-					timer_res === '0' &&
-					quiz_data.questions[selected_question].type === QuizQuestionType.ABCD}
+				class="answer-tile min-h-24 px-6 py-5 transition-all duration-500"
+				class:opacity-35={reveal && !answer.right}
+				class:ring-8={reveal && answer.right}
+				class:ring-white={reveal && answer.right}
+				style="background-color: {answer.color ?? default_colors[i]}; color: {get_foreground_color(
+					answer.color ?? default_colors[i]
+				)}"
 			>
-				<img
-					class="w-14 inline-block pl-4"
-					alt="icon"
-					style="color: {get_foreground_color(answer.color ?? default_colors[i])}"
-					src={kahoot_icons[i]}
-				/>
-				<span
-					class="text-center text-2xl px-2 py-4 w-full"
-					style="color: {get_foreground_color(answer.color ?? default_colors[i])}"
+				<ShapeIcon index={i} class="w-10 h-10 lg:w-12 lg:h-12 opacity-90" />
+				<span class="flex-1 text-center text-3xl lg:text-4xl font-bold leading-snug break-words"
 					>{answer.answer}</span
 				>
-				<span class="pl-4 w-10"></span>
+				{#if reveal && answer.right}
+					<span class="pop-in flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl text-[#3f8f1a] shadow-lg">✓</span>
+				{:else}
+					<span class="w-12"></span>
+				{/if}
 			</div>
 		{/each}
 	</div>
 {:else if quiz_data.questions[selected_question].type === QuizQuestionType.TEXT}
 	{#if timer_res === '0'}
-		<div class="grid grid-cols-2 gap-2 w-full p-4">
-			{#each quiz_data.questions[selected_question].answers as answer, i}
-				<div class="rounded-lg h-fit flex bg-[#73BA25]">
-					<span class="text-center text-2xl px-2 py-4 w-full text-black"
-						>{answer.answer}</span
-					>
-					<span class="pl-4 w-10"></span>
+		<div class="grid grid-cols-2 gap-4 w-full p-6">
+			{#each quiz_data.questions[selected_question].answers as answer}
+				<div class="answer-tile bg-[#73BA25] px-6 py-5">
+					<span class="text-center text-3xl font-bold w-full text-[#173F4F]">{answer.answer}</span>
 				</div>
 			{/each}
 		</div>
 	{:else}
-		<div class="flex justify-center">
-			<p class="text-2xl">{$t('admin_page.enter_answer_into_field')}</p>
+		<div class="flex justify-center mt-6">
+			<p class="stage-card px-8 py-4 text-3xl">{$t('admin_page.enter_answer_into_field')}</p>
 		</div>
 	{/if}
 {/if}

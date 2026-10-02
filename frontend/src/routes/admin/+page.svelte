@@ -243,7 +243,8 @@ SPDX-License-Identifier: MPL-2.0
 	<title>ClassQuiz - Host</title>
 </svelte:head>
 <div
-	class="min-h-screen min-w-full"
+	class="min-h-dvh min-w-full"
+	class:stage={!bg_color && !bg_image}
 	style="background-repeat: no-repeat;background-size: cover;background-position: center;background-image: {bg_image
 		? `url('${bg_image}')`
 		: `unset`}; background-color: {bg_color ? bg_color : 'transparent'}"

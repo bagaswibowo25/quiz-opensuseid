@@ -202,46 +202,63 @@ SPDX-License-Identifier: MPL-2.0
 	{/if}
 </svelte:head>
 
+{#snippet brand()}
+	<div class="flex flex-col items-center gap-2 mb-6">
+		<img src="/geeko.svg" alt="openSUSE" class="h-14 sm:h-16 w-auto drop-shadow-lg" />
+		<p class="text-sm uppercase tracking-[0.3em] text-[#c5e8a8]">openSUSE Quiz</p>
+	</div>
+{/snippet}
+
 {#if game_pin === '' || game_pin.length < 6}
-	<div class="flex flex-col justify-center align-center w-full min-h-dvh px-4">
-		<form class="flex-col flex justify-center align-center mx-auto">
-			<h1 class="text-lg text-center">{$t('words.game_pin')}</h1>
+	<div class="flex flex-col justify-center items-center w-full min-h-dvh px-4 pb-24">
+		{@render brand()}
+		<form
+			onsubmit={(e) => e.preventDefault()}
+			class="stage-card pop-in w-full max-w-sm flex flex-col gap-4 p-6 sm:p-8"
+		>
+			<label for="game-pin" class="text-center text-xl font-bold">{$t('words.game_pin')}</label>
 			<input
-				class="border border-gray-400 self-center text-center text-black ring-0 outline-hidden p-2 rounded-lg focus:shadow-2xl transition-all"
+				id="game-pin"
+				class="w-full rounded-2xl border-2 border-white/20 bg-white px-4 py-3 text-center text-3xl font-bold tracking-[0.3em] text-[#173F4F] outline-hidden placeholder:text-gray-300 focus:border-[#73BA25] focus:ring-4 focus:ring-[#73BA25]/40 transition-all"
 				bind:value={game_pin}
 				maxlength="6"
 				inputmode="numeric"
+				autocomplete="off"
+				placeholder="000000"
 			/>
-			<!--				use:tippy={{content: "Please enter the game pin", sticky: true, placement: 'top'}}-->
-
-			<br />
-			<div class="mt-2">
-				<BrownButton disabled={game_pin.length < 6}>{$t('words.submit')}</BrownButton>
-			</div>
+			<button
+				type="button"
+				class="admin-button w-full !py-3 text-xl"
+				disabled={game_pin.length < 6}>{$t('words.submit')}</button
+			>
 		</form>
 	</div>
 {:else}
-	<div class="flex flex-col justify-center align-center w-full min-h-dvh px-4">
-		<form onsubmit={setUsername} class="flex-col flex justify-center align-center mx-auto">
-			<h1 class="text-lg text-center">{$t('words.username')}</h1>
+	<div class="flex flex-col justify-center items-center w-full min-h-dvh px-4 pb-24">
+		{@render brand()}
+		<form onsubmit={setUsername} class="stage-card pop-in w-full max-w-sm flex flex-col gap-4 p-6 sm:p-8">
+			<label for="username" class="text-center text-xl font-bold">{$t('words.username')}</label>
 			<input
-				class="border border-gray-400 self-center text-center text-black ring-0 outline-hidden p-2 rounded-lg focus:shadow-2xl transition-all"
+				id="username"
+				class="w-full rounded-2xl border-2 border-white/20 bg-white px-4 py-3 text-center text-2xl font-bold text-[#173F4F] outline-hidden focus:border-[#73BA25] focus:ring-4 focus:ring-[#73BA25]/40 transition-all"
 				bind:value={username}
 				maxlength="17"
+				autocomplete="nickname"
 			/>
 			{#if custom_field}
-				<h1 class="text-lg text-center">{custom_field}</h1>
+				<label for="custom-field" class="text-center text-lg font-semibold">{custom_field}</label>
 				<input
-					class="border border-gray-400 self-center text-center text-black ring-0 outline-hidden p-2 rounded-lg focus:shadow-2xl transition-all"
+					id="custom-field"
+					class="w-full rounded-2xl border-2 border-white/20 bg-white px-4 py-3 text-center text-xl text-[#173F4F] outline-hidden focus:border-[#73BA25] focus:ring-4 focus:ring-[#73BA25]/40 transition-all"
 					bind:value={custom_field_value}
 				/>
 			{/if}
-
-			<div class="mt-2">
-				<BrownButton disabled={username.length <= 3} onclick={setUsername}
-					>{$t('words.submit')}</BrownButton
-				>
-			</div>
+			<button
+				type="button"
+				class="admin-button w-full !py-3 text-xl"
+				disabled={username.length <= 3}
+				onclick={setUsername}>{$t('words.submit')}</button
+			>
 		</form>
 	</div>
 {/if}

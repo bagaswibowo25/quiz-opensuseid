@@ -16,6 +16,7 @@ SPDX-License-Identifier: MPL-2.0
 	import BrownButton from '$lib/components/buttons/brown.svelte';
 	import { get_foreground_color } from '../helpers';
 	import MediaComponent from '$lib/editor/MediaComponent.svelte';
+	import ShapeIcon from '$lib/play/shape_icon.svelte';
 
 	const { t } = getLocalization();
 
@@ -146,11 +147,16 @@ SPDX-License-Identifier: MPL-2.0
 <div class="h-dvh w-full flex flex-col overflow-y-auto">
 	{#if game_mode === 'normal'}
 		<div
-			class="flex flex-col justify-start shrink-0 max-h-[40dvh] overflow-y-auto px-3"
-			class:mt-10={[QuizQuestionType.RANGE, QuizQuestionType.ORDER, QuizQuestionType.TEXT]}
+			class="flex flex-col justify-start shrink-0 max-h-[40dvh] overflow-y-auto px-3 pt-3"
+			class:mt-10={[QuizQuestionType.RANGE, QuizQuestionType.ORDER, QuizQuestionType.TEXT].includes(
+				question.type
+			)}
 		>
+			<p class="mb-2 text-center">
+				<span class="stage-pill !px-4 !py-1 text-sm">Question {Number(question_index) + 1}</span>
+			</p>
 			<h1
-				class="text-xl sm:text-2xl lg:text-4xl font-semibold leading-snug text-center text-black dark:text-white mt-3 mb-2 break-words"
+				class="pop-in mb-2 rounded-2xl bg-white px-4 py-3 text-xl sm:text-2xl lg:text-4xl font-bold leading-snug text-center text-[#173F4F] shadow-xl break-words"
 			>
 				{@html question.question}
 			</h1>
@@ -168,7 +174,7 @@ SPDX-License-Identifier: MPL-2.0
 		{#if question.type === QuizQuestionType.ABCD || question.type === QuizQuestionType.VOTING}
 			<div class="w-full relative flex-1 min-h-[50dvh]">
 				<div
-					class="absolute top-0 bottom-0 left-0 right-0 m-auto rounded-full h-fit w-fit border-2 border-black shadow-2xl z-40"
+					class="pointer-events-none absolute top-0 bottom-0 left-0 right-0 m-auto rounded-full h-fit w-fit border-4 border-white shadow-2xl z-40"
 				>
 					<CircularTimer text={timer_res} progress={circular_progress} color="#ef4444" />
 				</div>
@@ -176,7 +182,12 @@ SPDX-License-Identifier: MPL-2.0
 				<div class="grid grid-cols-2 auto-rows-fr gap-2 sm:gap-3 w-full p-2 sm:p-4 h-full">
 					{#each question.answers as answer, i}
 						<button
-							class="rounded-xl h-full min-h-0 flex align-middle justify-center disabled:opacity-60 p-2 sm:p-3 border-2 border-black"
+							class="answer-tile h-full min-h-0 p-3 sm:p-4"
+							class:opacity-35={selected_answer !== undefined &&
+								selected_answer !== answer.answer}
+							class:ring-4={selected_answer === answer.answer}
+							class:ring-white={selected_answer === answer.answer}
+							class:scale-105={selected_answer === answer.answer}
 							style="background-color: {answer.color ??
 								default_colors[i]}; color: {get_foreground_color(
 								answer.color ?? default_colors[i]
@@ -185,17 +196,25 @@ SPDX-License-Identifier: MPL-2.0
 							onclick={() => selectAnswer(answer.answer)}
 						>
 							{#if game_mode === 'kahoot'}
-								<img
-									class="h-2/3 inline-block m-auto"
-									alt="Icon"
-									src={kahoot_icons[i]}
-								/>
+								<ShapeIcon index={i} class="m-auto w-1/2 h-1/2 max-w-24 max-h-24" />
 							{:else}
-								<p class="m-auto text-base sm:text-xl lg:text-3xl font-semibold leading-snug break-words [overflow-wrap:anywhere]">{answer.answer}</p>
+								<ShapeIcon index={i} class="w-6 h-6 sm:w-9 sm:h-9 opacity-90" />
+								<p
+									class="flex-1 text-center text-base sm:text-xl lg:text-3xl font-bold leading-snug break-words [overflow-wrap:anywhere]"
+								>
+									{answer.answer}
+								</p>
 							{/if}
 						</button>
 					{/each}
 				</div>
+				{#if selected_answer !== undefined}
+					<p
+						class="pop-in absolute bottom-3 left-1/2 -translate-x-1/2 z-40 whitespace-nowrap rounded-full bg-[#0f2b36]/90 px-5 py-2 text-base sm:text-lg font-semibold text-white shadow-xl"
+					>
+						✅ Answer locked in!
+					</p>
+				{/if}
 			</div>
 		{:else if question.type === QuizQuestionType.RANGE}
 			<span
@@ -231,7 +250,7 @@ SPDX-License-Identifier: MPL-2.0
 					style="width: {(100 / parseInt(question.time)) * parseInt(timer_res)}vw"
 				></span>
 				<div class="flex justify-center mt-10">
-					<p class="text-black dark:text-white">Enter your answer</p>
+					<p>Enter your answer</p>
 				</div>
 				<div class="flex justify-center m-2">
 					<input
@@ -361,5 +380,15 @@ SPDX-License-Identifier: MPL-2.0
 				</div>
 			{/await}
 		{/if}
+	{:else}
+		<div class="flex flex-1 items-center justify-center p-6 pb-24">
+			<div class="stage-card pop-in px-8 py-6 text-center">
+				<p class="text-4xl">{selected_answer !== undefined ? '⏳' : '⌛'}</p>
+				<p class="mt-2 text-2xl font-bold">
+					{selected_answer !== undefined ? 'Answer locked in!' : "Time's up!"}
+				</p>
+				<p class="mt-1 text-white/80">Look at the big screen 👀</p>
+			</div>
+		</div>
 	{/if}
 </div>

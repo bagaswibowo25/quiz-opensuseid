@@ -89,8 +89,8 @@ SPDX-License-Identifier: MPL-2.0
 {/if}
 {#if game_state.timer_res !== '0' && game_state.selected_question >= 0}
 	<span
-		class="fixed top-0 bg-red-500 h-8 transition-all"
-		class:mt-10={game_state.control_visible}
+		class="fixed top-0 z-30 h-3 rounded-r-full bg-gradient-to-r from-[#73BA25] to-[#35B9AB] shadow-[0_0_12px_#73BA25] transition-all duration-1000 ease-linear"
+		class:mt-14={game_state.control_visible}
 		style="width: {(100 /
 			parseInt(game_state.quiz_data.questions[game_state.selected_question].time)) *
 			parseInt(game_state.timer_res)}vw"
@@ -99,7 +99,7 @@ SPDX-License-Identifier: MPL-2.0
 
 <div
 	class="w-full h-full"
-	class:pt-28={game_state.control_visible}
+	class:pt-20={game_state.control_visible}
 	class:pt-12={!game_state.control_visible}
 >
 	{#if game_state.timer_res !== undefined && !final_results_clicked && !game_state.question_results}
@@ -126,8 +126,8 @@ SPDX-License-Identifier: MPL-2.0
 	{#if game_state.timer_res === '0' && JSON.stringify(game_state.final_results) === JSON.stringify( [null] ) && game_state.quiz_data.questions[game_state.selected_question].type !== QuizQuestionType.SLIDE && game_state.question_results !== null && game_state.quiz_data.questions[game_state.selected_question]?.hide_results !== true}
 		{#if game_state.question_results === undefined}
 			{#if !final_results_clicked}
-				<div class="w-full flex justify-center">
-					<h1 class="text-3xl">{$t('admin_page.no_answers')}</h1>
+				<div class="w-full flex justify-center pt-10">
+					<h1 class="stage-card px-10 py-6 text-4xl">{$t('admin_page.no_answers')}</h1>
 				</div>
 			{/if}
 		{:else if game_state.quiz_data.questions[game_state.selected_question].type === QuizQuestionType.VOTING}
@@ -153,20 +153,24 @@ SPDX-License-Identifier: MPL-2.0
 	{/if}
 	<br />
 	{#if game_state.selected_question === -1}
-		<div class="flex flex-col justify-center w-screen h-full">
-			<h1 class="text-7xl text-center">{@html game_state.quiz_data.title}</h1>
-			<p class="text-3xl pt-8 text-center">{@html game_state.quiz_data.description}</p>
+		<div class="flex flex-col items-center justify-center w-full min-h-[75dvh] px-6 gap-6">
 			{#if game_state.quiz_data.cover_image}
-				<div class="flex justify-center align-middle items-center">
-					<div class="h-[30vh] m-auto w-auto mt-12">
-						<img
-							class="max-h-full max-w-full block"
-							src="/api/v1/storage/download/{game_state.quiz_data.cover_image}"
-							alt="Not provided"
-						/>
-					</div>
+				<img
+					class="pop-in w-full max-w-5xl max-h-[65dvh] object-contain rounded-3xl shadow-2xl"
+					src="/api/v1/storage/download/{game_state.quiz_data.cover_image}"
+					alt={game_state.quiz_data.title}
+				/>
+			{:else}
+				<div class="stage-card pop-in w-full max-w-5xl px-10 py-12 text-center">
+					<h1 class="text-5xl lg:text-7xl font-extrabold leading-tight">
+						{@html game_state.quiz_data.title}
+					</h1>
+					<p class="mt-6 text-2xl lg:text-3xl text-[#c5e8a8]">
+						{@html game_state.quiz_data.description}
+					</p>
 				</div>
 			{/if}
+			<p class="text-2xl text-white/80 animate-pulse">Get ready… 🦎</p>
 		</div>
 	{/if}
 </div>

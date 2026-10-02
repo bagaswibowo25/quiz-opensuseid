@@ -80,52 +80,47 @@ SPDX-License-Identifier: MPL-2.0
 	// https://svelte.dev/repl/96a58afdea2248a5b7e489160ffba887?version=3.44.2
 </script>
 
-<div class="h-full flex flex-col">
-	<div class="flex justify-center">
-		<div>
-			<table class="table-auto text-xl">
-				<thead>
-					<tr>
-						<th class="p-2 border-r border-r-black border-b-2 border-b-black"
-							>{$t('words.name')}</th
-						>
-						<th class="p-2 border-b-2 border-b-black"
-							>{$t('words.point', { count: 2 })}</th
-						>
-						{#if show_new_score_clicked}
-							<th in:fly|global={{ x: 300 }} class="p-2 border-b-2 border-b-black"
-								>{$t('play_page.points_added')}
-							</th>
-						{/if}
-					</tr>
-				</thead>
-				<tbody>
-					{#each player_names as player, i (player)}
-						<tr animate:flip>
-							<td class:hidden={i > 3} class="p-2 border-r border-r-black"
-								>{player}</td
-							>
-							<td class:hidden={i > 3} class="p-2">{data[player]}</td>
-							{#if show_new_score_clicked}
-								<td
-									in:fly|global={{ x: 300 }}
-									class:hidden={i > 3}
-									class="p-2"
-									class:text-red-600={score_by_username[player] === 0 ||
-										score_by_username[player] === undefined}
-								>
-									+{score_by_username[player] ?? '0'}
-								</td>
-							{/if}
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	</div>
+<div
+	class="mx-auto flex h-full w-full max-w-7xl flex-col-reverse items-center justify-center gap-10 px-6 pb-28 lg:flex-row lg:items-start"
+>
 	{#if [QuizQuestionType.ABCD, QuizQuestionType.VOTING, QuizQuestionType.TEXT].includes(question.type)}
-		<div class="mt-12">
+		<div class="stage-card px-8 py-6">
 			<VotingResults data={new_data} {question} />
 		</div>
 	{/if}
+	<div class="flex w-full max-w-3xl flex-col gap-3">
+	<h2 class="mb-3 text-center text-4xl lg:text-5xl font-extrabold">🏆 Leaderboard</h2>
+		{#each player_names.slice(0, 5) as player, i (player)}
+			<div
+				animate:flip={{ duration: 600 }}
+				class="flex items-center gap-4 rounded-2xl px-6 py-4 text-2xl lg:text-3xl shadow-xl {i === 0
+					? 'bg-[#73BA25] text-[#173F4F]'
+					: 'bg-[#0f2b36]/85 text-white'}"
+			>
+				<span
+					class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl font-extrabold {i ===
+					0
+						? 'bg-white text-[#173F4F]'
+						: 'bg-white/15'}">{i + 1}</span
+				>
+				<span class="flex-1 truncate font-bold">{player}</span>
+				{#if show_new_score_clicked}
+					<span
+						in:fly|global={{ x: 120 }}
+						class="text-xl font-semibold {score_by_username[player] === 0 ||
+						score_by_username[player] === undefined
+							? i === 0
+								? 'text-[#173F4F]/60'
+								: 'text-white/50'
+							: i === 0
+								? 'text-[#173F4F]'
+								: 'text-[#73BA25]'}"
+					>
+						+{score_by_username[player] ?? '0'}
+					</span>
+				{/if}
+				<span class="w-28 text-right font-extrabold tabular-nums">{data[player]}</span>
+			</div>
+		{/each}
+	</div>
 </div>
