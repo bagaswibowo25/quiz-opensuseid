@@ -125,8 +125,8 @@ SPDX-License-Identifier: MPL-2.0
 			return;
 		}
 		let captcha_resp: string;
-		if (Cookies.get('kicked')) {
-			console.log("%cYou're Banned!", 'font-size:6rem');
+		if (Cookies.get('kicked') === game_pin) {
+			alert('You were removed from this game by the host.');
 			return;
 		}
 

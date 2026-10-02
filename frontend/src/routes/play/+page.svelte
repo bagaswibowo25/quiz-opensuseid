@@ -139,11 +139,12 @@ SPDX-License-Identifier: MPL-2.0
 	});
 
 	socket.on('kick', () => {
-		window.alert('You got kicked');
+		window.alert('You were removed from this game by the host.');
 		preventReload = false;
+		// Only block re-joining this particular game, not every game on this browser
+		Cookies.set('kicked', game_pin, { expires: 1 });
 		game_pin = '';
 		username = '';
-		Cookies.set('kicked', 'value', { expires: 1 });
 		window.location.reload();
 	});
 	socket.on('final_results', (data) => {

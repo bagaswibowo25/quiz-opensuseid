@@ -111,7 +111,9 @@ SPDX-License-Identifier: MPL-2.0
 				title="Click to kick"
 				class="rounded-full border-2 border-white/30 bg-[#0f2b36]/80 px-5 py-2 text-xl font-semibold shadow-lg transition hover:border-red-400 hover:bg-red-600/80 hover:line-through"
 				onclick={() => {
-					socket_game_controls.kick_player(player.username, game_state.players);
+					if (confirm(`Kick ${player.username} from the game?`)) {
+						socket_game_controls.kick_player(player.username, game_state.players);
+					}
 				}}>{player.username}</button
 			>
 		{/each}
