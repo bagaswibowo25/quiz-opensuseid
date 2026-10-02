@@ -205,7 +205,7 @@ SPDX-License-Identifier: MPL-2.0
 {#snippet brand()}
 	<div class="flex flex-col items-center gap-2 mb-6">
 		<img src="/geeko.svg" alt="openSUSE" class="h-14 sm:h-16 w-auto drop-shadow-lg" />
-		<p class="text-sm uppercase tracking-[0.3em] text-[#c5e8a8]">openSUSE Quiz</p>
+		<p class="text-base font-semibold tracking-[0.2em] text-[#c5e8a8]">openSUSE Quiz</p>
 	</div>
 {/snippet}
 

@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="165" height="330" viewBox="0 0 165 330">
 	<defs>
-		<g id="f" fill="none" stroke="#73ba25" stroke-opacity=".28" stroke-width="3">
+		<g id="f" fill="none" stroke="#73ba25" stroke-opacity=".2" stroke-width="3">
 			<ellipse cx="0" cy="-38" rx="22" ry="36"/>
 			<ellipse cx="0" cy="38" rx="22" ry="36"/>
 			<ellipse cx="-38" cy="0" rx="36" ry="22"/>
 			<ellipse cx="38" cy="0" rx="36" ry="22"/>
-			<circle r="5" fill="#73ba25" fill-opacity=".28" stroke="none"/>
+			<circle r="5" fill="#73ba25" fill-opacity=".2" stroke="none"/>
 		</g>
 	</defs>
 	<use xlink:href="#f" x="82.5" y="165"/>
