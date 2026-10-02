@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
+import asyncio
 import base64
 import hashlib
 import json
@@ -279,6 +280,21 @@ async def set_question_number(sid: str, data: str):
     )
 
 
+# Answers for a question are stored as one JSON list in Redis and updated read-modify-write.
+# Without serialisation, concurrent submits overwrite each other and most answers are lost
+# (load test: 35 of 300 recorded). The API runs a single worker (MAX_WORKERS=1), so a
+# per-question asyncio.Lock is enough to make the update atomic.
+_answer_locks: dict[str, asyncio.Lock] = {}
+
+
+def _get_answer_lock(game_pin: str, q_index: int) -> asyncio.Lock:
+    key = f"{game_pin}:{q_index}"
+    lock = _answer_locks.get(key)
+    if lock is None:
+        lock = _answer_locks[key] = asyncio.Lock()
+    return lock
+
+
 @sio.event
 async def submit_answer(sid: str, data: dict):
     now = datetime.now()
@@ -297,6 +313,11 @@ async def submit_answer(sid: str, data: dict):
         await sio.emit("question_not_active", room=sid)
         return
 
+    async with _get_answer_lock(session["game_pin"], question_index):
+        await _record_answer(sid, session, data, question_index, game_data, now)
+
+
+async def _record_answer(sid: str, session: dict, data, question_index: int, game_data, now: datetime):
     already_answered = await has_already_answered(session["game_pin"], question_index, session["username"])
     if already_answered:
         await sio.emit("already_replied", room=sid)
@@ -330,12 +351,12 @@ async def submit_answer(sid: str, data: dict):
         q_index=int(float(data.question_index)),
     )
     player_count = await redis.scard(f"game_session:{session['game_pin']}:players")
-    await sio.emit("player_answer", {})
+    await sio.emit("player_answer", {}, room=f"admin:{session['game_pin']}")
     if len(answers) == player_count:
         game_data = await PlayGame.get_from_redis(session["game_pin"])
         game_data.question_show = False
         await game_data.save(session["game_pin"])
-        await sio.emit("everyone_answered", {})
+        await sio.emit("everyone_answered", {}, room=session["game_pin"])
 
 
 @sio.event

@@ -39,6 +39,8 @@ services:
     environment: *env_vars
     volumes:
       - ./uploads:/app/data
+      # Patched socket handlers (answer race fix + targeted broadcasts); see git log
+      - ./classquiz/socket_server/__init__.py:/app/classquiz/socket_server/__init__.py:ro
 
   worker:
     image: ghcr.io/mawoka-myblock/classquiz-backend:master
