@@ -203,7 +203,7 @@ SPDX-License-Identifier: MPL-2.0
 </svelte:head>
 
 {#if game_pin === '' || game_pin.length < 6}
-	<div class="flex flex-col justify-center align-center w-screen h-screen">
+	<div class="flex flex-col justify-center align-center w-full min-h-dvh px-4">
 		<form class="flex-col flex justify-center align-center mx-auto">
 			<h1 class="text-lg text-center">{$t('words.game_pin')}</h1>
 			<input
@@ -221,7 +221,7 @@ SPDX-License-Identifier: MPL-2.0
 		</form>
 	</div>
 {:else}
-	<div class="flex flex-col justify-center align-center w-screen h-screen">
+	<div class="flex flex-col justify-center align-center w-full min-h-dvh px-4">
 		<form onsubmit={setUsername} class="flex-col flex justify-center align-center mx-auto">
 			<h1 class="text-lg text-center">{$t('words.username')}</h1>
 			<input

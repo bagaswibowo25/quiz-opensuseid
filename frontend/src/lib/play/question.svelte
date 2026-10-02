@@ -143,15 +143,14 @@ SPDX-License-Identifier: MPL-2.0
 	const default_colors = ['#73BA25', '#35B9AB', '#21A4D4', '#173F4F'];
 </script>
 
-<div class="h-screen w-screen">
+<div class="h-dvh w-full flex flex-col overflow-y-auto">
 	{#if game_mode === 'normal'}
 		<div
-			class="flex flex-col justify-start"
+			class="flex flex-col justify-start shrink-0 max-h-[40dvh] overflow-y-auto px-3"
 			class:mt-10={[QuizQuestionType.RANGE, QuizQuestionType.ORDER, QuizQuestionType.TEXT]}
-			style="height: {question.image ? '33.333333' : '16.666667'}%"
 		>
 			<h1
-				class="lg:text-2xl text-lg text-center text-black dark:text-white mt-2 break-normal mb-2"
+				class="text-xl sm:text-2xl lg:text-4xl font-semibold leading-snug text-center text-black dark:text-white mt-3 mb-2 break-words"
 			>
 				{@html question.question}
 			</h1>
@@ -159,7 +158,7 @@ SPDX-License-Identifier: MPL-2.0
 				<div class="max-h-full">
 					<MediaComponent
 						src={question.image}
-						css_classes="object-cover mx-auto mb-8 max-h-[90%]"
+						css_classes="object-contain mx-auto mb-2 max-h-[25dvh] rounded-lg"
 					/>
 				</div>
 			{/if}
@@ -167,17 +166,17 @@ SPDX-License-Identifier: MPL-2.0
 	{/if}
 	{#if timer_res !== '0'}
 		{#if question.type === QuizQuestionType.ABCD || question.type === QuizQuestionType.VOTING}
-			<div class="w-full relative h-full" style="height: {get_div_height()}%">
+			<div class="w-full relative flex-1 min-h-[50dvh]">
 				<div
 					class="absolute top-0 bottom-0 left-0 right-0 m-auto rounded-full h-fit w-fit border-2 border-black shadow-2xl z-40"
 				>
 					<CircularTimer text={timer_res} progress={circular_progress} color="#ef4444" />
 				</div>
 
-				<div class="grid grid-rows-2 grid-flow-col auto-cols-auto gap-2 w-full p-4 h-full">
+				<div class="grid grid-cols-2 auto-rows-fr gap-2 sm:gap-3 w-full p-2 sm:p-4 h-full">
 					{#each question.answers as answer, i}
 						<button
-							class="rounded-lg h-full flex align-middle justify-center disabled:opacity-60 p-3 border-2 border-black"
+							class="rounded-xl h-full min-h-0 flex align-middle justify-center disabled:opacity-60 p-2 sm:p-3 border-2 border-black"
 							style="background-color: {answer.color ??
 								default_colors[i]}; color: {get_foreground_color(
 								answer.color ?? default_colors[i]
@@ -192,7 +191,7 @@ SPDX-License-Identifier: MPL-2.0
 									src={kahoot_icons[i]}
 								/>
 							{:else}
-								<p class="m-auto">{answer.answer}</p>
+								<p class="m-auto text-base sm:text-xl lg:text-3xl font-semibold leading-snug break-words [overflow-wrap:anywhere]">{answer.answer}</p>
 							{/if}
 						</button>
 					{/each}

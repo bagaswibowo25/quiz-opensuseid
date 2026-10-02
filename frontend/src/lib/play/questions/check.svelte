@@ -60,10 +60,10 @@ SPDX-License-Identifier: MPL-2.0
 		<CircularTimer text={timer_res} progress={circular_progress} color="#ef4444" />
 	</div>
 
-	<div class="grid grid-rows-2 grid-flow-col auto-cols-auto gap-2 w-full p-4 h-full">
+	<div class="grid grid-cols-2 auto-rows-fr gap-2 sm:gap-3 w-full p-2 sm:p-4 h-full">
 		{#each question.answers as answer, i}
 			<button
-				class="rounded-lg h-full flex align-middle justify-center disabled:opacity-60 p-3 border-2 border-black transition-all"
+				class="rounded-xl h-full min-h-0 flex align-middle justify-center disabled:opacity-60 p-2 sm:p-3 border-2 border-black transition-all"
 				style="background-color: {answer.color ??
 					default_colors[i]}; color: {get_foreground_color(
 					answer.color ?? default_colors[i]
@@ -75,7 +75,7 @@ SPDX-License-Identifier: MPL-2.0
 				{#if game_mode === 'kahoot'}
 					<img class="h-2/3 inline-block m-auto" alt="Icon" src={kahoot_icons[i]} />
 				{:else}
-					<p class="m-auto">{answer.answer}</p>
+					<p class="m-auto text-base sm:text-xl lg:text-3xl font-semibold leading-snug break-words [overflow-wrap:anywhere]">{answer.answer}</p>
 				{/if}
 			</button>
 		{/each}

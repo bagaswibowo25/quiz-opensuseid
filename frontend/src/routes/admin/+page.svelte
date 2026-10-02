@@ -244,7 +244,7 @@ SPDX-License-Identifier: MPL-2.0
 </svelte:head>
 <div
 	class="min-h-screen min-w-full"
-	style="background-repeat: no-repeat;background-size: 100% 100%;background-image: {bg_image
+	style="background-repeat: no-repeat;background-size: cover;background-position: center;background-image: {bg_image
 		? `url('${bg_image}')`
 		: `unset`}; background-color: {bg_color ? bg_color : 'transparent'}"
 	class:text-black={bg_color}
