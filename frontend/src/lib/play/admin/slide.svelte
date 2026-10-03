@@ -6,8 +6,9 @@ SPDX-License-Identifier: MPL-2.0
 
 <script lang="ts">
 	import type { Question } from '$lib/quiz_types';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import Pikaso from 'pikaso';
+	import { start_music, stop_track } from '$lib/play/sounds';
 
 	interface Props {
 		question: Question;
@@ -43,6 +44,12 @@ SPDX-License-Identifier: MPL-2.0
 		});
 
 	const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+	// Calm background music while a slide is on screen.
+	onMount(() => {
+		start_music('calm');
+	});
+	onDestroy(() => stop_track('calm'));
 
 	onMount(() => {
 		canvas = new Pikaso({

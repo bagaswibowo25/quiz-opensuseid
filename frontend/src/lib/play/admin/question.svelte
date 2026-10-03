@@ -18,7 +18,7 @@ SPDX-License-Identifier: MPL-2.0
 		play_urgent,
 		play_times_up,
 		start_music,
-		stop_music
+		stop_track
 	} from '$lib/play/sounds';
 	import { onDestroy } from 'svelte';
 
@@ -69,10 +69,10 @@ SPDX-License-Identifier: MPL-2.0
 
 	// Background music only while players can still answer.
 	$effect(() => {
-		if (timer_res !== '0' && timer_res !== undefined) start_music();
-		else stop_music();
+		if (timer_res !== '0' && timer_res !== undefined) start_music('quiz');
+		else stop_track('quiz');
 	});
-	onDestroy(() => stop_music());
+	onDestroy(() => stop_track('quiz'));
 </script>
 
 <div class="flex flex-col items-center gap-4 px-6 w-full">

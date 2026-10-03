@@ -1,7 +1,9 @@
 """Original gamelan-inspired quiz loop for openSUSE.Asia Summit 2026 (Yogyakarta).
 
 Everything is synthesized here from sine waves and noise: no samples, no third-party material.
-Output: a seamless ~68.6 s loop (8 gongan x 16 beats at 112 BPM) as 16-bit WAV.
+Output: a seamless loop (8 gongan x 16 beats) as 16-bit WAV.
+  python compose.py quiz-loop.wav          # "quiz": 112 BPM, kendang + shaker, for questions
+  python compose.py calm-loop.wav calm     # "calm": 90 BPM, no drums, for slides
 """
 import sys
 import wave
@@ -9,7 +11,8 @@ import wave
 import numpy as np
 
 SR = 44100
-BPM = 112
+CALM = len(sys.argv) > 2 and sys.argv[2] == 'calm'
+BPM = 90 if CALM else 112
 BEAT = 60 / BPM
 BEATS_PER_GONGAN = 16
 rng = np.random.default_rng(2026)
@@ -106,8 +109,13 @@ for i, b in enumerate(beats):
 
     # Peking: anticipates the next balungan note, doubled on 8ths, one octave up
     nxt = note_of(beats[(i + 1) % N_BEATS])
-    for k, (pn, po) in enumerate([(n, o), nxt, (n, o), nxt]):
-        add(metal(freq(pn, po + 1), 0.7, 0.22, PEKING, beat_hz=6.0), t0 + k * BEAT / 4, 0.12 if k % 2 else 0.16)
+    if CALM:
+        # Sparser peking: two strokes per beat, softer
+        for k, (pn, po) in enumerate([(n, o), nxt]):
+            add(metal(freq(pn, po + 1), 1.0, 0.35, PEKING, beat_hz=6.0), t0 + k * BEAT / 2, 0.08 if k else 0.1)
+    else:
+        for k, (pn, po) in enumerate([(n, o), nxt, (n, o), nxt]):
+            add(metal(freq(pn, po + 1), 0.7, 0.22, PEKING, beat_hz=6.0), t0 + k * BEAT / 4, 0.12 if k % 2 else 0.16)
 
     # Kenong on every 4th beat (pitch of that balungan note, one octave down)
     if pos % 4 == 3:
@@ -118,6 +126,9 @@ for i, b in enumerate(beats):
     # Gong ageng closes the gongan
     if pos == BEATS_PER_GONGAN - 1:
         add(gong_sig, t0, 0.17)
+
+    if CALM:
+        continue  # no drums in the calm version
 
     # Kendang: low strokes on beats 1 and 3 of each group of 4, slaps on the off-beats
     if pos % 4 in (0, 2):

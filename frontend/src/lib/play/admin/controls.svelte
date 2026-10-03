@@ -16,7 +16,8 @@ SPDX-License-Identifier: MPL-2.0
 		play_tick,
 		is_music_muted,
 		set_music_muted,
-		start_music
+		start_music,
+		wanted_music
 	} from '$lib/play/sounds';
 
 	interface Props {
@@ -44,14 +45,10 @@ SPDX-License-Identifier: MPL-2.0
 	const toggle_music = () => {
 		music_muted = !music_muted;
 		set_music_muted(music_muted);
-		const question_running =
-			game_state.selected_question >= 0 &&
-			game_state.timer_res !== '0' &&
-			game_state.quiz_data?.questions?.[game_state.selected_question]?.type !==
-				QuizQuestionType.SLIDE;
-		if (!music_muted && question_running) {
+		const track = wanted_music();
+		if (!music_muted && track) {
 			unlock_audio();
-			start_music();
+			start_music(track);
 		}
 	};
 

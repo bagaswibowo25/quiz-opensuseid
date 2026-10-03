@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 // Host screen audio: countdown sounds synthesized with Web Audio, plus a background music loop.
 
-import music_url from '$lib/assets/music/opensuse-quiz-loop.mp3';
+import quiz_music_url from '$lib/assets/music/opensuse-quiz-loop.mp3';
+import calm_music_url from '$lib/assets/music/opensuse-calm-loop.mp3';
 
 const MUTE_KEY = 'cq_host_sound_muted';
 
@@ -87,19 +88,26 @@ export const play_times_up = (): void => {
 	tone(392, 0.7, 'triangle', 0.32, 0.42);
 };
 
-// ---- Background music while players answer ----
-// Original gamelan-inspired loop composed for this event (see scripts/music/compose.py).
+// ---- Background music ----
+// Original gamelan-inspired loops composed for this event (see scripts/music/compose.py):
+// "quiz" (112 BPM, with drums) while players answer, "calm" (90 BPM, no drums) during slides.
+
+export type MusicTrack = 'quiz' | 'calm';
 
 const MUSIC_MUTE_KEY = 'cq_host_music_muted';
-const MUSIC_VOLUME = 0.35;
+const TRACKS: Record<MusicTrack, { url: string; volume: number }> = {
+	quiz: { url: quiz_music_url, volume: 0.35 },
+	calm: { url: calm_music_url, volume: 0.3 }
+};
 
-let music_buffer: AudioBuffer | null = null;
-let music_loading: Promise<AudioBuffer | null> | null = null;
+const music_buffers: Partial<Record<MusicTrack, AudioBuffer>> = {};
+const music_loading: Partial<Record<MusicTrack, Promise<AudioBuffer | null>>> = {};
+const music_offsets: Record<MusicTrack, number> = { quiz: 0, calm: 0 };
 let music_source: AudioBufferSourceNode | null = null;
 let music_gain: GainNode | null = null;
+let music_playing: MusicTrack | null = null;
 let music_started_at = 0;
-let music_offset = 0;
-let music_wanted = false;
+let music_wanted: MusicTrack | null = null;
 
 export const is_music_muted = (): boolean => {
 	try {
@@ -115,33 +123,43 @@ export const set_music_muted = (muted: boolean): void => {
 	} catch {
 		/* storage unavailable: setting just won't persist */
 	}
-	if (muted) stop_music();
+	if (muted) {
+		const wanted = music_wanted;
+		stop_music();
+		music_wanted = wanted; // remember what should play if music is turned back on
+	}
 };
 
-const load_music = (ac: AudioContext): Promise<AudioBuffer | null> => {
-	if (music_buffer) return Promise.resolve(music_buffer);
-	if (!music_loading) {
-		music_loading = fetch(music_url)
+/** The track the current screen wants (even while muted), so the toggle can resume it. */
+export const wanted_music = (): MusicTrack | null => music_wanted;
+
+const load_music = (ac: AudioContext, track: MusicTrack): Promise<AudioBuffer | null> => {
+	const cached = music_buffers[track];
+	if (cached) return Promise.resolve(cached);
+	if (!music_loading[track]) {
+		music_loading[track] = fetch(TRACKS[track].url)
 			.then((r) => r.arrayBuffer())
 			.then((data) => ac.decodeAudioData(data))
-			.then((buf) => (music_buffer = buf))
+			.then((buf) => (music_buffers[track] = buf))
 			.catch(() => {
-				music_loading = null;
+				delete music_loading[track];
 				return null;
 			});
 	}
-	return music_loading;
+	return music_loading[track];
 };
 
-/** Fade the loop in; it resumes where the previous question left off. */
-export const start_music = async (): Promise<void> => {
-	music_wanted = true;
-	if (is_music_muted() || music_source) return;
+/** Fade a loop in; each track resumes where it last stopped. */
+export const start_music = async (track: MusicTrack = 'quiz'): Promise<void> => {
+	music_wanted = track;
+	if (music_playing === track) return;
+	if (music_playing) stop_music(0.4, false);
+	if (is_music_muted()) return;
 	const ac = get_ctx();
 	if (!ac) return;
-	const buf = await load_music(ac);
-	// Question may have ended (or music muted) while the file was loading.
-	if (!buf || !music_wanted || music_source || is_music_muted()) return;
+	const buf = await load_music(ac, track);
+	// The screen may have changed (or music muted) while the file was loading.
+	if (!buf || music_wanted !== track || music_playing || is_music_muted()) return;
 
 	const src = ac.createBufferSource();
 	src.buffer = buf;
@@ -149,25 +167,34 @@ export const start_music = async (): Promise<void> => {
 	const gain = ac.createGain();
 	const now = ac.currentTime;
 	gain.gain.setValueAtTime(0.0001, now);
-	gain.gain.exponentialRampToValueAtTime(MUSIC_VOLUME, now + 0.8);
+	gain.gain.exponentialRampToValueAtTime(TRACKS[track].volume, now + 0.8);
 	src.connect(gain).connect(ac.destination);
-	const offset = music_offset % buf.duration;
+	const offset = music_offsets[track] % buf.duration;
 	src.start(now, offset);
 	music_started_at = now - offset;
 	music_source = src;
 	music_gain = gain;
+	music_playing = track;
 };
 
-/** Fade the loop out and remember the position for the next question. */
-export const stop_music = (fade = 0.6): void => {
-	music_wanted = false;
-	if (!music_source || !music_gain || !ctx) return;
+/** Fade the current loop out and remember its position. */
+export const stop_music = (fade = 0.6, clear_wanted = true): void => {
+	if (clear_wanted) music_wanted = null;
+	if (!music_source || !music_gain || !music_playing || !ctx) return;
 	const now = ctx.currentTime;
-	if (music_buffer) music_offset = (now - music_started_at) % music_buffer.duration;
+	const buf = music_buffers[music_playing];
+	if (buf) music_offsets[music_playing] = (now - music_started_at) % buf.duration;
 	music_gain.gain.cancelScheduledValues(now);
 	music_gain.gain.setValueAtTime(Math.max(music_gain.gain.value, 0.0001), now);
 	music_gain.gain.exponentialRampToValueAtTime(0.0001, now + fade);
 	music_source.stop(now + fade + 0.05);
 	music_source = null;
 	music_gain = null;
+	music_playing = null;
+};
+
+/** Stop only if this track is the one playing/wanted, so a screen being torn down
+ *  can't silence the music the next screen just started. */
+export const stop_track = (track: MusicTrack): void => {
+	if (music_playing === track || music_wanted === track) stop_music();
 };
