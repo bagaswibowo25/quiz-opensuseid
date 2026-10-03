@@ -174,6 +174,13 @@ SPDX-License-Identifier: MPL-2.0
 			});
 		}
 	};
+	// Late joiners are refused by the server once the host has started; say so instead of
+	// leaving the Submit button looking dead.
+	let join_error = $state('');
+	socket.on('game_already_started', () => {
+		join_error = 'This game has already started. Please wait for the next round.';
+	});
+
 	socket.on('game_not_found', () => {
 		game_pin = '';
 		if (browser) {
@@ -248,6 +255,14 @@ SPDX-License-Identifier: MPL-2.0
 					class="w-full rounded-2xl border-2 border-white/20 bg-white px-4 py-3 text-center text-xl text-[#173F4F] outline-hidden focus:border-[#73BA25] focus:ring-4 focus:ring-[#73BA25]/40 transition-all"
 					bind:value={custom_field_value}
 				/>
+			{/if}
+			{#if join_error}
+				<p
+					class="pop-in rounded-xl border border-amber-300/60 bg-amber-400/15 px-4 py-3 text-center text-base font-semibold text-amber-100"
+					role="alert"
+				>
+					⏳ {join_error}
+				</p>
 			{/if}
 			<button
 				type="button"
