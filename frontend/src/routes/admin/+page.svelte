@@ -136,6 +136,22 @@ SPDX-License-Identifier: MPL-2.0
 	socket.on('registered_as_admin', (data) => {
 		game_state.quiz_data = JSON.parse(data['game']);
 		console.log(game_state.quiz_data);
+		const resume = data['resume'];
+		if (resume) {
+			// Host page was reloaded mid-game: pick up where the server is.
+			game_state.players = resume.players ?? [];
+			game_state.player_scores = resume.player_scores ?? {};
+			if (resume.started) {
+				game_state.game_started = true;
+				game_state.selected_question = resume.current_question;
+				game_state.shown_question_now = resume.current_question;
+				game_state.answer_count = resume.answer_count ?? 0;
+				game_state.question_results = null;
+				// A running question can't resume its countdown here; show it as ended so the
+				// host gets "Show results" (players can still answer until then).
+				game_state.timer_res = resume.current_question >= 0 ? '0' : undefined;
+			}
+		}
 		success = true;
 	});
 	socket.on('player_joined', (int_data) => {

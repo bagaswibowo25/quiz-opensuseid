@@ -247,6 +247,24 @@ async def start_game(sid: str, _data: dict):
     await sio.emit("start_game", room=session["game_pin"])
 
 
+async def _admin_resume_state(game_pin: str, game: PlayGame) -> dict:
+    """Everything a reloaded host page needs to carry on where it left off."""
+    players = [json.loads(p) for p in await redis.smembers(f"game_session:{game_pin}:players")]
+    totals = await redis.hgetall(f"game_session:{game_pin}:player_scores")
+    answer_count = 0
+    if game.current_question >= 0:
+        answers = await AnswerDataList.get_redis_or_empty(game_pin, game.current_question)
+        answer_count = len(answers) if answers is not None else 0
+    return {
+        "players": players,
+        "started": game.started,
+        "current_question": game.current_question,
+        "question_show": game.question_show,
+        "answer_count": answer_count,
+        "player_scores": {k: int(v) for k, v in totals.items()},
+    }
+
+
 @sio.event
 async def register_as_admin(sid: str, data: dict):
     try:
@@ -257,13 +275,31 @@ async def register_as_admin(sid: str, data: dict):
         return
     game_pin = data.game_pin
     game_id = data.game_id
-    if await redis.get(f"game_session:{game_pin}") is not None:
-        await sio.emit("already_registered_as_admin", room=sid)
-        return
-    await GameSession(admin=sid, game_id=game_id, answers=[]).save(game_pin)
+    game_raw = await redis.get(f"game:{game_pin}")
+    existing_session = await redis.get(f"game_session:{game_pin}")
+    resume = None
+    if existing_session is not None:
+        # The host reloading (or reconnecting after a hang) presents the same secret game id as
+        # before: let them take the game back instead of locking them out. Anyone who only knows
+        # the PIN still gets "already registered".
+        game = PlayGame.model_validate_json(game_raw) if game_raw else None
+        if game is None or str(game.game_id) != str(game_id):
+            await sio.emit("already_registered_as_admin", room=sid)
+            return
+        game_session = GameSession.model_validate_json(existing_session)
+        if game_session.admin and game_session.admin != sid:
+            try:
+                await sio.disconnect(game_session.admin)  # stale tab, if it is still open
+            except Exception:  # noqa: BLE001 - the old socket is usually already gone
+                pass
+        game_session.admin = sid
+        await game_session.save(game_pin)
+        resume = await _admin_resume_state(game_pin, game)
+    else:
+        await GameSession(admin=sid, game_id=game_id, answers=[]).save(game_pin)
     await sio.emit(
         "registered_as_admin",
-        {"game_id": game_id, "game": await redis.get(f"game:{game_pin}")},
+        {"game_id": game_id, "game": game_raw, "resume": resume},
         room=sid,
     )
     session = {"game_pin": game_pin, "admin": True, "remote": False}

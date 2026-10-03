@@ -18,6 +18,7 @@ SPDX-License-Identifier: MPL-2.0
 	interface Props {
 		data: any;
 		question: Question;
+		server_totals?: Record<string, number> | null;
 		new_data: Array<{
 			username: string;
 			answer: string;
@@ -27,7 +28,7 @@ SPDX-License-Identifier: MPL-2.0
 		}>;
 	}
 
-	let { data = $bindable(), question, new_data }: Props = $props();
+	let { data = $bindable(), question, new_data, server_totals = null }: Props = $props();
 
 	// let data_by_username = {};
 
@@ -55,6 +56,17 @@ SPDX-License-Identifier: MPL-2.0
 	let show_new_score_clicked = $state(false);
 
 	const show_new_score = () => {
+		if (server_totals) {
+			// Authoritative totals (they already include this question's points)
+			for (const [player, total] of Object.entries(server_totals)) {
+				data[player] = total;
+			}
+			show_new_score_clicked = true;
+			setTimeout(() => {
+				data = data;
+			}, 800);
+			return;
+		}
 		for (const i of player_names) {
 			if (isNaN(data[i])) {
 				data[i] = 0;

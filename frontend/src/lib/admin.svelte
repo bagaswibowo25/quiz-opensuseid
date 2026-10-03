@@ -29,6 +29,12 @@ SPDX-License-Identifier: MPL-2.0
 
 	let { game_token, bg_color, game_state = $bindable() }: Props = $props();
 
+	// Running totals from the server; the leaderboard uses these so a host reload can't reset them
+	let server_totals: Record<string, number> | null = $state(null);
+	socket.on('player_scores', (data) => {
+		server_totals = data;
+	});
+
 	socket.on('get_question_results', () => {
 		console.log('get_question_results');
 	});
@@ -52,6 +58,8 @@ SPDX-License-Identifier: MPL-2.0
 	socket.on('final_results', (data) => {
 		final_results_clicked = true;
 		game_state.timer_res = '0';
+		// Podium from the server's totals (covers hidden-results questions and host reloads)
+		if (server_totals) game_state.player_scores = { ...server_totals };
 		game_state.final_results = data;
 	});
 
@@ -148,6 +156,7 @@ SPDX-License-Identifier: MPL-2.0
 			{:then c}
 				<c.default
 					bind:data={game_state.player_scores}
+					{server_totals}
 					question={game_state.quiz_data.questions[game_state.selected_question]}
 					new_data={game_state.question_results}
 				/>
