@@ -9,7 +9,15 @@ SPDX-License-Identifier: MPL-2.0
 	import { getLocalization } from '$lib/i18n';
 	import { SocketGameControls } from '$lib/play/admin/socket_game_controls.ts';
 	import type { GameState } from '$lib/play/admin/game_state.ts';
-	import { is_muted, set_muted, unlock_audio, play_tick } from '$lib/play/sounds';
+	import {
+		is_muted,
+		set_muted,
+		unlock_audio,
+		play_tick,
+		is_music_muted,
+		set_music_muted,
+		start_music
+	} from '$lib/play/sounds';
 
 	interface Props {
 		bg_color: string;
@@ -29,6 +37,21 @@ SPDX-License-Identifier: MPL-2.0
 		if (!muted) {
 			unlock_audio();
 			play_tick();
+		}
+	};
+
+	let music_muted = $state(is_music_muted());
+	const toggle_music = () => {
+		music_muted = !music_muted;
+		set_music_muted(music_muted);
+		const question_running =
+			game_state.selected_question >= 0 &&
+			game_state.timer_res !== '0' &&
+			game_state.quiz_data?.questions?.[game_state.selected_question]?.type !==
+				QuizQuestionType.SLIDE;
+		if (!music_muted && question_running) {
+			unlock_audio();
+			start_music();
 		}
 	};
 
@@ -56,6 +79,15 @@ SPDX-License-Identifier: MPL-2.0
 			title={muted ? 'Sound off — click to turn on' : 'Sound on — click to mute'}
 			aria-label={muted ? 'Unmute countdown sound' : 'Mute countdown sound'}
 			>{muted ? '🔇' : '🔊'}</button
+		>
+		<button
+			type="button"
+			onclick={toggle_music}
+			class="rounded-full bg-white/15 px-3 py-1 text-lg transition hover:bg-white/25"
+			class:opacity-40={music_muted}
+			title={music_muted ? 'Music off — click to turn on' : 'Music on — click to turn off'}
+			aria-label={music_muted ? 'Turn background music on' : 'Turn background music off'}
+			>🎵</button
 		>
 	</div>
 	<div class="flex items-center gap-2">

@@ -13,7 +13,14 @@ SPDX-License-Identifier: MPL-2.0
 	import MediaComponent from '$lib/editor/MediaComponent.svelte';
 	import { getLocalization } from '$lib/i18n';
 	import ShapeIcon from '$lib/play/shape_icon.svelte';
-	import { play_tick, play_urgent, play_times_up } from '$lib/play/sounds';
+	import {
+		play_tick,
+		play_urgent,
+		play_times_up,
+		start_music,
+		stop_music
+	} from '$lib/play/sounds';
+	import { onDestroy } from 'svelte';
 
 	interface Props {
 		quiz_data: QuizData;
@@ -59,6 +66,13 @@ SPDX-License-Identifier: MPL-2.0
 		else if (seconds <= 5) play_urgent();
 		else play_tick();
 	});
+
+	// Background music only while players can still answer.
+	$effect(() => {
+		if (timer_res !== '0' && timer_res !== undefined) start_music();
+		else stop_music();
+	});
+	onDestroy(() => stop_music());
 </script>
 
 <div class="flex flex-col items-center gap-4 px-6 w-full">
