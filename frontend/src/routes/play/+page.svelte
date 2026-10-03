@@ -76,24 +76,51 @@ SPDX-License-Identifier: MPL-2.0
 		socket.emit('echo_time_sync', data);
 	});
 
+	// PIN from the link/QR code (?pin=); it wins over a cookie left by another game.
+	const url_pin: string = data.game_pin ?? '';
+	let pending_rejoin: { sid: string; username: string; game_pin: string } | null = null;
+	let rejoin_timeout: ReturnType<typeof setTimeout> | undefined;
+
+	const forget_session = () => {
+		Cookies.remove('joined_game');
+		pending_rejoin = null;
+		clearTimeout(rejoin_timeout);
+	};
+
 	socket.on('connect', async () => {
 		console.log('Connected!');
 		const cookie_data = Cookies.get('joined_game');
 		if (!cookie_data) {
 			return;
 		}
-		const data = JSON.parse(cookie_data);
-		// Restore who we are, so results/feedback can find this player's answers after a reload
-		username = data.username;
-		game_pin = data.game_pin;
+		let saved;
+		try {
+			saved = JSON.parse(cookie_data);
+		} catch {
+			forget_session();
+			return;
+		}
+		if (url_pin && url_pin !== saved.game_pin) {
+			// Opened a different game's link: don't drag the player back into the old one
+			forget_session();
+			return;
+		}
+		// Only adopt the saved name/PIN once the server accepts the rejoin (see 'rejoined_game');
+		// a stale cookie must not leave the join screen stuck on an old game.
+		pending_rejoin = saved;
 		socket.emit('rejoin_game', {
-			old_sid: data.sid,
-			username: data.username,
-			game_pin: data.game_pin
+			old_sid: saved.sid,
+			username: saved.username,
+			game_pin: saved.game_pin
 		});
-		const res = await fetch(`/api/v1/quiz/play/check_captcha/${game_pin}`);
-		const json = await res.json();
-		game_mode = json.game_mode;
+		clearTimeout(rejoin_timeout);
+		rejoin_timeout = setTimeout(() => {
+			if (pending_rejoin) forget_session();
+		}, 4000);
+	});
+
+	socket.on('rejoin_failed', () => {
+		forget_session();
 	});
 
 	// Socket-events
@@ -105,7 +132,14 @@ SPDX-License-Identifier: MPL-2.0
 			expires: 3600
 		});
 	});
-	socket.on('rejoined_game', (data) => {
+	socket.on('rejoined_game', async (data) => {
+		if (pending_rejoin) {
+			// Restore who we are, so results/feedback can find this player's answers
+			username = pending_rejoin.username;
+			game_pin = pending_rejoin.game_pin;
+			pending_rejoin = null;
+			clearTimeout(rejoin_timeout);
+		}
 		gameData = data;
 		// The server now knows us by this connection's id; without updating the cookie a second
 		// reload would present the stale id and be rejected.
@@ -115,7 +149,17 @@ SPDX-License-Identifier: MPL-2.0
 		if (data.started) {
 			gameMeta.started = true;
 		}
+		const res = await fetch(`/api/v1/quiz/play/check_captcha/${game_pin}`);
+		const json = await res.json();
+		game_mode = json.game_mode;
 	});
+
+	// Escape hatch on the waiting screen (e.g. stuck in a game that already ended)
+	const leave_game = () => {
+		forget_session();
+		preventReload = false;
+		window.location.href = '/play';
+	};
 
 	socket.on('game_not_found', () => {
 		const cookie_data = Cookies.get('joined_game');
@@ -198,6 +242,7 @@ SPDX-License-Identifier: MPL-2.0
 		{:else if gameData !== undefined && question_index === ''}
 			<ShowTitle
 				{username}
+				onleave={leave_game}
 				started={gameMeta.started}
 				title={gameData.title}
 				description={gameData.description}

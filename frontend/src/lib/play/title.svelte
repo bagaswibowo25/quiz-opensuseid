@@ -11,9 +11,10 @@ SPDX-License-Identifier: MPL-2.0
 		cover_image: string | undefined;
 		username?: string;
 		started?: boolean;
+		onleave?: () => void;
 	}
 
-	let { title, description, cover_image, username, started = false }: Props = $props();
+	let { title, description, cover_image, username, started = false, onleave }: Props = $props();
 </script>
 
 <div class="flex flex-col items-center justify-center w-full min-h-dvh px-4 py-8 pb-24 gap-6">
@@ -46,5 +47,14 @@ SPDX-License-Identifier: MPL-2.0
 				<span class="h-2 w-2 rounded-full bg-[#21A4D4] animate-bounce [animation-delay:300ms]"></span>
 			</span>
 		</p>
+		{#if onleave}
+			<button
+				type="button"
+				class="mt-4 text-sm text-white/50 underline underline-offset-4 hover:text-white/80"
+				onclick={() => {
+					if (confirm('Leave this game? You can join again with the game PIN.')) onleave();
+				}}>Leave this game</button
+			>
+		{/if}
 	</div>
 </div>

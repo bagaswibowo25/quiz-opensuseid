@@ -103,6 +103,8 @@ async def rejoin_game(sid: str, data: dict):
     redis_sid_key = f"game_session:{data.game_pin}:players:{data.username}"
     old_sid = await redis.get(redis_sid_key)
     if old_sid != data.old_sid:
+        # Tell the browser so it drops its stale cookie instead of waiting forever
+        await sio.emit("rejoin_failed", room=sid)
         return
     await redis.set(redis_sid_key, sid, ex=7200)
     await redis.srem(
