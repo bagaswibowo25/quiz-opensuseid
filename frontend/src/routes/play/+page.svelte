@@ -16,6 +16,7 @@ SPDX-License-Identifier: MPL-2.0
 	import KahootResults from '$lib/play/results_kahoot.svelte';
 	import { getLocalization } from '$lib/i18n';
 	import Cookies from 'js-cookie';
+	import { tick } from 'svelte';
 	const { t } = getLocalization();
 
 	interface Props {
@@ -82,6 +83,9 @@ SPDX-License-Identifier: MPL-2.0
 			return;
 		}
 		const data = JSON.parse(cookie_data);
+		// Restore who we are, so results/feedback can find this player's answers after a reload
+		username = data.username;
+		game_pin = data.game_pin;
 		socket.emit('rejoin_game', {
 			old_sid: data.sid,
 			username: data.username,
@@ -103,6 +107,11 @@ SPDX-License-Identifier: MPL-2.0
 	});
 	socket.on('rejoined_game', (data) => {
 		gameData = data;
+		// The server now knows us by this connection's id; without updating the cookie a second
+		// reload would present the stale id and be rejected.
+		Cookies.set('joined_game', JSON.stringify({ sid: socket.id, username, game_pin }), {
+			expires: 3600
+		});
 		if (data.started) {
 			gameMeta.started = true;
 		}
@@ -152,6 +161,14 @@ SPDX-License-Identifier: MPL-2.0
 	socket.on('final_results', (data) => {
 		final_results = data;
 		Cookies.remove('joined_game');
+	});
+
+	// Running totals from the server (survives reloads; replaces the in-browser sum)
+	// Applied after the results screen has rendered: it adds this question's points to the
+	// in-browser totals on mount, and the server's totals must win over that sum.
+	socket.on('player_scores', async (data) => {
+		await tick();
+		scores = data;
 	});
 
 	socket.on('solutions', (data) => {

@@ -99,13 +99,12 @@ async def rejoin_game(sid: str, data: dict):
     except ValidationError as e:
         await sio.emit("error", room=sid)
         print(e)
+        return
     redis_sid_key = f"game_session:{data.game_pin}:players:{data.username}"
     old_sid = await redis.get(redis_sid_key)
     if old_sid != data.old_sid:
         return
-    encrypted_datetime = fernet.encrypt(datetime.now().isoformat().encode("utf-8")).decode("utf-8")
-    await sio.emit("time_sync", encrypted_datetime, room=sid)
-    await redis.set(redis_sid_key, sid)
+    await redis.set(redis_sid_key, sid, ex=7200)
     await redis.srem(
         f"game_session:{data.game_pin}:players",
         GamePlayer(username=data.username, sid=data.old_sid).model_dump_json(),
@@ -120,12 +119,54 @@ async def rejoin_game(sid: str, data: dict):
         "username": data.username,
         "sid_custom": sid,
         "admin": False,
+        "ping": 0,
     }
     await save_session(sid, sio, session)
     await sio.enter_room(sid, data.game_pin)
     await sio.emit(
         "rejoined_game",
         game_data.to_player_data(),
+        room=sid,
+    )
+    # Time sync only after the session is saved: the echo handler updates that session, and
+    # emitting earlier let this handler overwrite the measured ping (answers then failed).
+    encrypted_datetime = fernet.encrypt(datetime.now().isoformat().encode("utf-8")).decode("utf-8")
+    await sio.emit("time_sync", encrypted_datetime, room=sid)
+    await _resend_active_question(sid, data.game_pin, data.username, game_data)
+
+
+def _question_payload(game_data: PlayGame, index: int) -> dict:
+    temp_return = game_data.model_dump(include={"questions"})["questions"][index]
+    if game_data.questions[index].type == QuizQuestionType.VOTING:
+        for i in range(len(temp_return["answers"])):
+            temp_return["answers"][i] = VotingQuizAnswer(**temp_return["answers"][i])
+    temp_return["type"] = game_data.questions[index].type
+    if temp_return["type"] == QuizQuestionType.ORDER:
+        random.shuffle(temp_return["answers"])
+    return temp_return
+
+
+async def _resend_active_question(sid: str, game_pin: str, username: str, game_data: PlayGame) -> None:
+    """A player who reloads mid-question gets the question back with the time that is left."""
+    index = game_data.current_question
+    if not game_data.started or not game_data.question_show or index < 0:
+        return
+    if game_data.questions[index].type == QuizQuestionType.SLIDE:
+        return
+    if await has_already_answered(game_pin, index, username):
+        return
+    started_raw = await redis.get(f"game:{game_pin}:current_time")
+    if started_raw is None:
+        return
+    elapsed = (datetime.now() - datetime.fromisoformat(started_raw)).total_seconds()
+    remaining = int(float(game_data.questions[index].time) - elapsed)
+    if remaining <= 1:
+        return
+    question = _question_payload(game_data, index)
+    question["time"] = str(remaining)
+    await sio.emit(
+        "set_question_number",
+        {"question_index": index, "question": ReturnQuestion(**question).model_dump()},
         room=sid,
     )
 
@@ -240,6 +281,9 @@ async def get_question_results(sid: str, data: dict):
     game_data.question_show = False
     await game_data.save(game_pin)
     await sio.emit("question_results", answer_data_list.model_dump(), room=game_pin)
+    # Players used to sum totals in the browser, so a reload reset them; send the server's totals.
+    totals = await redis.hgetall(f"game_session:{game_pin}:player_scores")
+    await sio.emit("player_scores", {k: int(v) for k, v in totals.items()}, room=game_pin)
 
 
 @sio.event
@@ -254,7 +298,6 @@ async def set_question_number(sid: str, data: str):
     game_data.question_show = True
     await game_data.save(session["game_pin"])
     await redis.set(f"game:{session['game_pin']}:current_time", datetime.now().isoformat(), ex=7200)
-    temp_return = game_data.model_dump(include={"questions"})["questions"][int(float(data))]
     if game_data.questions[int(float(data))].type == QuizQuestionType.SLIDE:
         await sio.emit(
             "set_question_number",
@@ -264,12 +307,7 @@ async def set_question_number(sid: str, data: str):
             room=sid,
         )
         return
-    if game_data.questions[int(float(data))].type == QuizQuestionType.VOTING:
-        for i in range(len(temp_return["answers"])):
-            temp_return["answers"][i] = VotingQuizAnswer(**temp_return["answers"][i])
-    temp_return["type"] = game_data.questions[int(float(data))].type
-    if temp_return["type"] == QuizQuestionType.ORDER:
-        random.shuffle(temp_return["answers"])
+    temp_return = _question_payload(game_data, int(float(data)))
     await sio.emit(
         "set_question_number",
         {
@@ -324,7 +362,7 @@ async def _record_answer(sid: str, session: dict, data, question_index: int, gam
         return
 
     answer_right, answer = check_answer(game_data, data)
-    latency = int(float(session["ping"]))
+    latency = int(float(session.get("ping", 0)))
     time_q_started = datetime.fromisoformat(await redis.get(f"game:{session['game_pin']}:current_time"))
     diff = (time_q_started - now).total_seconds() * 1000  # - timedelta(milliseconds=latency)
     score = 0
